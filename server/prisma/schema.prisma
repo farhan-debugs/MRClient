@@ -1,0 +1,77 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id            String         @id @default(uuid())
+  name          String
+  email         String         @unique
+  password      String
+  role          String         @default("MEMBER") // ADMIN, MANAGER, MEMBER
+  avatar        String?
+  assignedTasks Task[]         @relation("AssigneeTasks")
+  createdTasks  Task[]         @relation("CreatorTasks")
+  comments      Comment[]
+  activities    ActivityLog[]
+  notifications Notification[]
+  createdAt     DateTime       @default(now())
+}
+
+model Task {
+  id               String        @id @default(uuid())
+  title            String
+  description      String?
+  category         String        @default("General") // Client Request, Operations, Bug, Maintenance, etc.
+  priority         String        @default("MEDIUM")  // LOW, MEDIUM, HIGH, URGENT
+  status           String        @default("NEW")     // NEW, IN_PROGRESS, BLOCKED, DONE
+  requesterName    String?
+  requesterContact String?
+  assigneeId       String?
+  assignee         User?         @relation("AssigneeTasks", fields: [assigneeId], references: [id])
+  creatorId        String?
+  creator          User?         @relation("CreatorTasks", fields: [creatorId], references: [id])
+  dueDate          DateTime?
+  comments         Comment[]
+  activities       ActivityLog[]
+  notifications    Notification[]
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+}
+
+model ActivityLog {
+  id         String   @id @default(uuid())
+  taskId     String
+  task       Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  actorId    String?
+  actor      User?    @relation(fields: [actorId], references: [id])
+  actionType String   // CREATED, STATUS_CHANGED, REASSIGNED, PRIORITY_CHANGED, COMMENT_ADDED, UPDATED
+  details    String   // Human-readable string or JSON of what changed
+  timestamp  DateTime @default(now())
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  taskId    String
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id])
+  content   String
+  createdAt DateTime @default(now())
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  taskId    String?
+  task      Task?    @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
