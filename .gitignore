@@ -11,15 +11,21 @@ yarn-error.log*
 
 # Environment & local configurations
 .env
-.env.local
-.env.*.local
+.env.*
 *.env
+**/.env
+**/.env.*
+!.env.example
+!**/.env.example
 
 # SQLite & Databases
 *.db
 *.db-journal
+**/*.db
+**/*.db-journal
 dev.db
 dev.db-journal
+
 
 # Build outputs
 dist/
